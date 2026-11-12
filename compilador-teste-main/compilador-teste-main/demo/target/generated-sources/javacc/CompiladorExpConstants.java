@@ -9,7 +9,51 @@ public interface CompiladorExpConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int NUMERO = 5;
+  int SE = 5;
+  /** RegularExpression Id. */
+  int ENTAO = 6;
+  /** RegularExpression Id. */
+  int SENAO = 7;
+  /** RegularExpression Id. */
+  int FIM = 8;
+  /** RegularExpression Id. */
+  int ENQUANTO = 9;
+  /** RegularExpression Id. */
+  int FACA = 10;
+  /** RegularExpression Id. */
+  int LEIA = 11;
+  /** RegularExpression Id. */
+  int ESCREVA = 12;
+  /** RegularExpression Id. */
+  int ATRIB = 13;
+  /** RegularExpression Id. */
+  int PONTO_VIRGULA = 14;
+  /** RegularExpression Id. */
+  int APARENTESES = 15;
+  /** RegularExpression Id. */
+  int FPARENTESES = 16;
+  /** RegularExpression Id. */
+  int MENOR = 17;
+  /** RegularExpression Id. */
+  int MAIOR = 18;
+  /** RegularExpression Id. */
+  int IGUAL = 19;
+  /** RegularExpression Id. */
+  int MAIS = 20;
+  /** RegularExpression Id. */
+  int MENOS = 21;
+  /** RegularExpression Id. */
+  int MULT = 22;
+  /** RegularExpression Id. */
+  int DIV = 23;
+  /** RegularExpression Id. */
+  int LETRA = 24;
+  /** RegularExpression Id. */
+  int DIGITO = 25;
+  /** RegularExpression Id. */
+  int NUMERO = 26;
+  /** RegularExpression Id. */
+  int IDENTIFICADOR = 27;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -19,9 +63,31 @@ public interface CompiladorExpConstants {
     "<EOF>",
     "\" \"",
     "\"\\t\"",
-    "\"\\n\"",
     "\"\\r\"",
+    "\"\\n\"",
+    "\"se\"",
+    "\"entao\"",
+    "\"senao\"",
+    "\"fim\"",
+    "\"enquanto\"",
+    "\"faca\"",
+    "\"leia\"",
+    "\"escreva\"",
+    "\":=\"",
+    "\";\"",
+    "\"(\"",
+    "\")\"",
+    "\"<\"",
+    "\">\"",
+    "\"=\"",
+    "\"+\"",
+    "\"-\"",
+    "\"*\"",
+    "\"/\"",
+    "<LETRA>",
+    "<DIGITO>",
     "<NUMERO>",
+    "<IDENTIFICADOR>",
   };
 
 }

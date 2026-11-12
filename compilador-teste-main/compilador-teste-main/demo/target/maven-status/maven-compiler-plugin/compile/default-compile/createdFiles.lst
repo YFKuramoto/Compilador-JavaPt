@@ -1,8 +1,8 @@
-CompiladorExpTokenManager.class
 CompiladorExpConstants.class
-TokenMgrError.class
+CompiladorExpTokenManager.class
 Token.class
-SimpleCharStream.class
+TokenMgrError.class
 com/example/Main.class
+SimpleCharStream.class
 ParseException.class
 CompiladorExp.class
