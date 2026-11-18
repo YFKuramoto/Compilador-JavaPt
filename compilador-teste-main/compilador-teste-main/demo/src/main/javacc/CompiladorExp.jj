@@ -4,6 +4,8 @@ options {
 
 PARSER_BEGIN(CompiladorExp)
 
+package com.example;
+
 public class CompiladorExp {
     public static void main(String[] args) {
         try {
@@ -35,6 +37,12 @@ PARSER_END(CompiladorExp)
 
 /* 1. ANALISADOR LÉXICO: IGNORAR ESPAÇOS E DEFINIR TOKENS */
 SKIP : { " " | "\t" | "\r" | "\n" }
+
+//Comentarios: de linha (duas barras) e de bloco
+SKIP : {
+      <"//" (~["\n", "\r"])*>
+    | <"/*" (~["*"])* "*" ( ~["*", "/"] (~["*"])* "*" | "*" )* "/">
+}
 
 /* Palavras Reservadas */
 TOKEN : {
