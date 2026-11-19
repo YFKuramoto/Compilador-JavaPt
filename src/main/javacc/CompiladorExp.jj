@@ -1,0 +1,192 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(CompiladorExp)
+
+package com.example;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class CompiladorExp {
+    private final Map<String, Double> variaveis = new HashMap<>();
+    public static void main(String[] args) {
+        try {
+            System.out.println("----------------------------------------");
+            System.out.println(" Compilador iniciado!");
+            System.out.println(" Digite o comando (ex: escreva 2 + 3 * 4) e aperte Enter.");
+            System.out.println(" Para sair, aperte Ctrl+D (Linux/Codespaces) ou Ctrl+Z (Windows) e Enter.");
+            System.out.println("----------------------------------------");
+
+            // Instancia o parser lendo do teclado (System.in)
+            CompiladorExp parser = new CompiladorExp(System.in);
+
+            // Inicia a análise do programa completo
+            parser.programa();
+
+            System.out.println("\n=> Sintaxe Correta!");
+
+        } catch (ParseException e) {
+            System.out.println("\n[ERRO] Erro de Sintaxe encontrado!");
+            System.out.println(e.getMessage());
+        } catch (TokenMgrError e) {
+            System.out.println("\n[ERRO] Erro Lexico (simbolo invalido) encontrado!");
+            System.out.println(e.getMessage());
+        }
+    }
+}
+
+PARSER_END(CompiladorExp)
+
+/* 1. ANALISADOR LÉXICO: IGNORAR ESPAÇOS E DEFINIR TOKENS */
+SKIP : { " " | "\t" | "\r" | "\n" }
+
+//Comentarios: de linha (duas barras) e de bloco
+SKIP : {
+      <"//" (~["\n", "\r"])*>
+    | <"/*" (~["*"])* "*" ( ~["*", "/"] (~["*"])* "*" | "*" )* "/">
+}
+
+/* Palavras Reservadas */
+TOKEN : {
+      <SE: "se">
+    | <ENTAO: "entao">
+    | <SENAO: "senao">
+    | <FIM: "fim">
+    | <ENQUANTO: "enquanto">
+    | <FACA: "faca">
+    | <LEIA: "leia">
+    | <ESCREVA: "escreva">
+}
+
+/* Operadores e Pontuação */
+TOKEN : {
+      <ATRIB: ":=">
+    | <PONTO_VIRGULA: ";">
+    | <APARENTESES: "(">
+    | <FPARENTESES: ")">
+    | <MENOR: "<">
+    | <MAIOR: ">">
+    | <IGUAL: "=">
+    | <MAIS: "+">
+    | <MENOS: "-">
+    | <MULT: "*">
+    | <DIV: "/">
+}
+
+/* Números e Identificadores */
+TOKEN : {
+      <#LETRA: ["a"-"z", "A"-"Z"]>
+    | <#DIGITO: ["0"-"9"]>
+    | <NUMERO: (<DIGITO>)+>
+
+    | <IDENTIFICADOR: <LETRA> (<LETRA> | <DIGITO>)*>
+}
+
+/* 2. ANALISADOR SINTÁTICO E SEMÂNTICO (REGRAS DA GRAMÁTICA) */
+
+void programa() :
+{}
+{
+    sequenciaDecl() <EOF>
+}
+
+void sequenciaDecl() :
+{}
+{
+    declaracao() ( <PONTO_VIRGULA> declaracao() )*
+}
+
+void declaracao() :
+{}
+{
+    condDecl() | repetDecl() | atribDecl() | leitDecl() | escrDecl()
+}
+
+void condDecl() :
+{}
+{
+    <SE> expressao() <ENTAO> sequenciaDecl() [ <SENAO> sequenciaDecl() ] <FIM>
+}
+
+void repetDecl() :
+{}
+{
+    <ENQUANTO> expressao() <FACA> sequenciaDecl() <FIM>
+}
+
+void atribDecl() :
+{ Token id; double val; }
+{
+    id = <IDENTIFICADOR> <ATRIB> val = expressao()
+    { variaveis.put(id.image, val); }
+}
+
+void leitDecl() :
+{}
+{
+    <LEIA> <IDENTIFICADOR>
+}
+
+// Comando escreva: calcula e exibe o resultado da expressão no terminal
+void escrDecl() :
+{ double resultado; }
+{
+    <ESCREVA> resultado = expressao()
+    { System.out.println("\n=> O resultado da expressao e: " + resultado); }
+}
+
+// expressao -> exp ( ("<"|">"|"=") exp )?
+double expressao() :
+{ double val1, val2; }
+{
+    val1 = Exp()
+    [
+        <MENOR> val2 = Exp() { val1 = (val1 < val2) ? 1.0 : 0.0; }
+      | <MAIOR> val2 = Exp() { val1 = (val1 > val2) ? 1.0 : 0.0; }
+      | <IGUAL> val2 = Exp() { val1 = (val1 == val2) ? 1.0 : 0.0; }
+    ]
+    { return val1; }
+}
+
+// exp -> termo ( ("+"|"-") termo )*
+double Exp() :
+{ double val1, val2; }
+{
+    val1 = Termo()
+    (
+        <MAIS> val2 = Termo() { val1 = val1 + val2; } // Ação semântica da soma
+      | <MENOS> val2 = Termo() { val1 = val1 - val2; } // Ação semântica da subtração
+    )*
+    { return val1; }
+}
+
+// termo -> fator ( ("*"|"/") fator )*
+double Termo() :
+{ double val1, val2; }
+{
+    val1 = Fator()
+    (
+        <MULT> val2 = Fator() { val1 = val1 * val2; } // Ação semântica da multiplicação
+      | <DIV> val2 = Fator() { val1 = val1 / val2; } // Ação semântica da divisão
+    )*
+    { return val1; }
+}
+
+// fator -> "(" exp ")" | numero | identificador
+double Fator() :
+{ double val; Token t; }
+{
+    // Se iniciar com parênteses, resolve a expressão dentro deles
+    <APARENTESES> val = expressao() <FPARENTESES>
+    { return val; }
+  |
+    // Se for um número, captura o texto do token e converte para double
+    t = <NUMERO>
+    { return Double.parseDouble(t.image); }
+  |
+    t = <IDENTIFICADOR>
+    { return variaveis.getOrDefault(t.image, 0.0); }
+}
+
