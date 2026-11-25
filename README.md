@@ -97,11 +97,11 @@ Compilador-JavaPt/
 ├── pom.xml                                  # Configuração do Maven e javacc-maven-plugin
 ├── README.md                                # Documentação formal e instruções do projeto
 ├── exemplos/                                # Programas de teste válidos e inválidos
-│   ├── valido_01_aritmetica.txt
-│   ├── valido_02_condicional.txt
-│   ├── valido_03_laco_leitura.txt
-│   ├── invalido_01_sintatico.txt
-│   └── invalido_02_lexico.txt
+│   ├── exemplo1.txt
+│   ├── exemplo2.txt
+│   ├── exemplo3.txt
+│   ├── exemplo4.txt
+│   └── exemplo5.txt
 └── src/
     └── main/
         ├── java/com/example/Main.java       # Classe executora dos programas de exemplo
@@ -118,25 +118,29 @@ Compilador-JavaPt/
 
 ### Passo a passo pelo Terminal
 
+
 1. **Gerar o parser JavaCC e compilar o projeto:**
    ```bash
    mvn compile
    ```
 
-2. **Executar toda a suíte de exemplos (`exemplos/`):**
+2. **Executar o código inserido no `Main.java`:**
    ```bash
    java -cp target/classes com.example.Main
    ```
-   *(Durante o teste `valido_03_laco_leitura.txt`, digite um número inteiro positivo no console, como `5`, e pressione **Enter**.)*
+   *(Para testar outro programa da pasta `exemplos/`, copie o conteúdo do arquivo `.txt`, cole dentro da variável `codigo` em `src/main/java/com/example/Main.java`, rode `mvn compile` e execute novamente.)*
 
-3. **Executar um arquivo específico da linguagem:**
+3. **Executar colando o código diretamente no console (`System.in`):**
    ```bash
-   java -cp target/classes com.example.Main exemplos/valido_01_aritmetica.txt
+   java -cp target/classes com.example.CompiladorExp
    ```
+   *(Cole o código puro no terminal, pressione **Enter** e envie o fim de arquivo com **Ctrl + D** no Linux/Codespaces ou **Ctrl + Z** + **Enter** no Windows.)*
 
 ### Execução pelo VS Code / GitHub Codespaces
-1. Execute `mvn compile` no terminal (ou clique em **Maven → Lifecycle → compile** na barra lateral) sempre que alterar `CompiladorExp.jj`.
-2. Abra `src/main/java/com/example/Main.java` e clique em **Run** acima do método `main`.
+
+1. Sempre que alterar `CompiladorExp.jj`, execute `mvn compile` no terminal (ou clique em **Maven → Lifecycle → compile** na barra lateral).
+2. Abra o arquivo desejado na pasta `exemplos/`, copie o conteúdo e cole dentro de `String codigo = """ ... """;` em `src/main/java/com/example/Main.java`.
+3. Clique em **Run** acima do método `main` em `Main.java`. Caso o programa utilize o comando `leia`, digite o número no terminal inferior e pressione **Enter**.
 
 ---
 
@@ -144,4 +148,4 @@ Compilador-JavaPt/
 
 | Integrante | Responsabilidades e Módulos Desenvolvidos |
 | :--- | :--- |
-| Yuri Freire Kuramoto | Configuração do ambiente Maven/JavaCC, especificação léxica (`TOKEN`/`SKIP`), regras sintáticas $LL(1)$ e precedência de operadores, implementação da Árvore Sintática Abstrata (AST) para execução de controle de fluxo (`se`/`enquanto`), suíte de testes (`exemplos/`) e documentação formal. |
+| Yuri Freire Kuramoto | Configuração do ambiente Maven/JavaCC, especificação léxica (`TOKEN`/`SKIP`), regras sintáticas $LL(1)$ e precedência de operadores, ações semânticas e estruturas de execução (`se`/`enquanto`, variáveis e E/S), suíte de testes (`exemplos/`) e documentação formal. |
