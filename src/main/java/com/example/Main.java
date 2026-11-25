@@ -2,40 +2,35 @@ package com.example;
 
 import java.io.StringReader;
 
-public class Main { // se o arquivo se chamar App.java, mantenha "public class App"
+public class Main {
+
     public static void main(String[] args) {
-        testar("1. Expressao aritmetica",
-            "escreva 2 + 5 * 4 * 2"
-        );
+        // Cole aqui o codigo de qualquer arquivo da pasta exemplos/ para testar
+        String codigo = """
+                a := 40;
+                b := 20;
 
-        testar("2. Programa completo",
-            "leia x;\n" +
-            "x := 5;\n" +
-            "se x > 0 entao\n" +
-            "    enquanto x > 0 faca\n" +
-            "        escreva x * 2;\n" +
-            "        x := x - 1\n" +
-            "    fim\n" +
-            "senao\n" +
-            "    escreva x + 10\n" +
-            "fim"
-        );
+                se a <> b entao
+                     se a < b entao
+                        escreva b - a;
+                    senao
+                        escreva a - b / 2;
+                    fim;
+                senao
+                    escreva 0;
+                fim;
+                """;
 
-        testar("3. Erro sintatico proposital",
-            "se x > 0 escreva x fim"
-        );
-    }
-
-    private static void testar(String nomeTeste, String codigoFonte) {
-        System.out.println("=== " + nomeTeste + " ===");
         try {
-            CompiladorExp parser = new CompiladorExp(new StringReader(codigoFonte));
+            CompiladorExp parser = new CompiladorExp(new StringReader(codigo));
             parser.programa();
-            System.out.println("=> Sintaxe Correta!\n");
+            System.out.println("\n=> Programa executado com sucesso!");
         } catch (ParseException e) {
-            System.out.println("[ERRO SINTATICO] " + e.getMessage() + "\n");
+            System.out.println("\n[ERRO SINTATICO] " + e.getMessage());
         } catch (TokenMgrError e) {
-            System.out.println("[ERRO LEXICO] " + e.getMessage() + "\n");
+            System.out.println("\n[ERRO LEXICO] " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println("\n[ERRO SEMANTICO] " + e.getMessage());
         }
     }
 }

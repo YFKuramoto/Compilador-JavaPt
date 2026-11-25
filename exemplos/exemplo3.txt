@@ -1,0 +1,10 @@
+// Teste 3: Leitura do teclado (leia) e laco (enquanto) - ex: digite 5 (saida: 120.0)
+leia n;
+fat := 1;
+
+enquanto n > 1 faca
+    fat := fat * n;
+    n := n - 1;
+fim;
+
+escreva fat;

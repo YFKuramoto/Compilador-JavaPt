@@ -1,0 +1,13 @@
+// Teste 2: Desvio condicional (se / entao / senao) e diferenca (<>)
+a := 15;
+b := 20;
+
+se a <> b entao
+    se a < b entao
+        escreva b - a;
+    senao
+        escreva a - b;
+    fim;
+senao
+    escreva 0;
+fim;

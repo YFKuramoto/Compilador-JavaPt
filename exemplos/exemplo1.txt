@@ -1,0 +1,5 @@
+// Teste 1: Precedencia de operadores, parenteses e decimais
+base := 10;
+altura := 4.5;
+area := (base * altura) / 2 + 3 * 2;
+escreva area;

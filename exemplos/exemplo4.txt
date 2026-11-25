@@ -1,0 +1,5 @@
+// Teste 4: Erro sintatico proposital (falta da palavra reservada 'entao')
+x := 10;
+se x > 5
+    escreva x;
+fim;

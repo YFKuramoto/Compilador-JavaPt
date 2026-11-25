@@ -1,0 +1,3 @@
+// Teste 5: Erro lexico proposital (caractere '@' invalido na linguagem)
+valor := 10 @ 2;
+escreva valor;

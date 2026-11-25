@@ -35,27 +35,29 @@ public interface CompiladorExpConstants {
   /** RegularExpression Id. */
   int FPARENTESES = 18;
   /** RegularExpression Id. */
-  int MENOR = 19;
+  int DIFERENTE = 19;
   /** RegularExpression Id. */
-  int MAIOR = 20;
+  int MENOR = 20;
   /** RegularExpression Id. */
-  int IGUAL = 21;
+  int MAIOR = 21;
   /** RegularExpression Id. */
-  int MAIS = 22;
+  int IGUAL = 22;
   /** RegularExpression Id. */
-  int MENOS = 23;
+  int MAIS = 23;
   /** RegularExpression Id. */
-  int MULT = 24;
+  int MENOS = 24;
   /** RegularExpression Id. */
-  int DIV = 25;
+  int MULT = 25;
   /** RegularExpression Id. */
-  int LETRA = 26;
+  int DIV = 26;
   /** RegularExpression Id. */
-  int DIGITO = 27;
+  int LETRA = 27;
   /** RegularExpression Id. */
-  int NUMERO = 28;
+  int DIGITO = 28;
   /** RegularExpression Id. */
-  int IDENTIFICADOR = 29;
+  int NUMERO = 29;
+  /** RegularExpression Id. */
+  int IDENTIFICADOR = 30;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -81,6 +83,7 @@ public interface CompiladorExpConstants {
     "\";\"",
     "\"(\"",
     "\")\"",
+    "\"<>\"",
     "\"<\"",
     "\">\"",
     "\"=\"",

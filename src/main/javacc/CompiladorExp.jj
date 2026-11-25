@@ -3,35 +3,126 @@ options {
 }
 
 PARSER_BEGIN(CompiladorExp)
-
 package com.example;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CompiladorExp {
-    private final Map<String, Double> variaveis = new HashMap<>();
+
+    // Interfaces para executar comandos e expressões após validar a sintaxe
+    public interface Comando { void executar(); }
+    public interface Expr { double avaliar(); }
+
+    private final Map<String, Double> variaveis = new HashMap<String, Double>();
+    private Scanner entrada = new Scanner(System.in).useLocale(Locale.US);
+
+    public void setEntrada(Scanner scanner) {
+        this.entrada = scanner;
+    }
+
+    // --- Métodos auxiliares (compatíveis com o parser interno do JavaCC) ---
+
+    private Comando se(final Expr cond, final Comando entao, final Comando senao) {
+        return new Comando() {
+            public void executar() {
+                if (cond.avaliar() != 0.0) entao.executar();
+                else if (senao != null) senao.executar();
+            }
+        };
+    }
+
+    private Comando enquanto(final Expr cond, final Comando corpo) {
+        return new Comando() {
+            public void executar() {
+                while (cond.avaliar() != 0.0) corpo.executar();
+            }
+        };
+    }
+
+    private Comando atrib(final String nome, final Expr val) {
+        return new Comando() {
+            public void executar() {
+                variaveis.put(nome, val.avaliar());
+            }
+        };
+    }
+
+    private Comando leia(final String nome) {
+        return new Comando() {
+            public void executar() {
+                System.out.print("Digite o valor de " + nome + ": ");
+                variaveis.put(nome, entrada.nextDouble());
+            }
+        };
+    }
+
+    private Comando escreva(final Expr val) {
+        return new Comando() {
+            public void executar() {
+                System.out.println("=> O resultado da expressao e: " + val.avaliar());
+            }
+        };
+    }
+
+    private Expr num(String texto) {
+        final double valor = Double.parseDouble(texto);
+        return new Expr() {
+            public double avaliar() { return valor; }
+        };
+    }
+
+    private Expr var(final String nome) {
+        return new Expr() {
+            public double avaliar() {
+                if (!variaveis.containsKey(nome)) {
+                    throw new RuntimeException("Variavel '" + nome + "' nao foi inicializada!");
+                }
+                return variaveis.get(nome);
+            }
+        };
+    }
+
+    private Expr op(final Expr e1, final String operador, final Expr e2) {
+        return new Expr() {
+            public double avaliar() {
+                double a = e1.avaliar(), b = e2.avaliar();
+                switch (operador) {
+                    case "+":  return a + b;
+                    case "-":  return a - b;
+                    case "*":  return a * b;
+                    case "/":
+                        if (b == 0.0) throw new RuntimeException("Divisao por zero!");
+                        return a / b;
+                    case "<":  return (a < b)  ? 1.0 : 0.0;
+                    case ">":  return (a > b)  ? 1.0 : 0.0;
+                    case "=":  return (a == b) ? 1.0 : 0.0;
+                    case "<>": return (a != b) ? 1.0 : 0.0;
+                    default:   return 0.0;
+                }
+            }
+        };
+    }
+
     public static void main(String[] args) {
         try {
             System.out.println("----------------------------------------");
-            System.out.println(" Compilador iniciado!");
-            System.out.println(" Digite o comando (ex: escreva 2 + 3 * 4) e aperte Enter.");
-            System.out.println(" Para sair, aperte Ctrl+D (Linux/Codespaces) ou Ctrl+Z (Windows) e Enter.");
+            System.out.println("Compilador iniciado!");
+            System.out.println("Digite o programa e aperte Enter.");
+            System.out.println("Para sair, aperte Ctrl+Z (Windows) ou Ctrl+D (Linux/Mac) e Enter.");
             System.out.println("----------------------------------------");
 
-            // Instancia o parser lendo do teclado (System.in)
             CompiladorExp parser = new CompiladorExp(System.in);
-
-            // Inicia a análise do programa completo
             parser.programa();
 
             System.out.println("\n=> Sintaxe Correta!");
-
         } catch (ParseException e) {
             System.out.println("\n[ERRO] Erro de Sintaxe encontrado!");
             System.out.println(e.getMessage());
         } catch (TokenMgrError e) {
             System.out.println("\n[ERRO] Erro Lexico (simbolo invalido) encontrado!");
+            System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println("\n[ERRO] Erro Semantico encontrado!");
             System.out.println(e.getMessage());
         }
     }
@@ -40,15 +131,14 @@ public class CompiladorExp {
 PARSER_END(CompiladorExp)
 
 /* 1. ANALISADOR LÉXICO: IGNORAR ESPAÇOS E DEFINIR TOKENS */
+
 SKIP : { " " | "\t" | "\r" | "\n" }
 
-//Comentarios: de linha (duas barras) e de bloco
 SKIP : {
       <"//" (~["\n", "\r"])*>
     | <"/*" (~["*"])* "*" ( ~["*", "/"] (~["*"])* "*" | "*" )* "/">
 }
 
-/* Palavras Reservadas */
 TOKEN : {
       <SE: "se">
     | <ENTAO: "entao">
@@ -60,12 +150,12 @@ TOKEN : {
     | <ESCREVA: "escreva">
 }
 
-/* Operadores e Pontuação */
 TOKEN : {
       <ATRIB: ":=">
     | <PONTO_VIRGULA: ";">
     | <APARENTESES: "(">
     | <FPARENTESES: ")">
+    | <DIFERENTE: "<>">
     | <MENOR: "<">
     | <MAIOR: ">">
     | <IGUAL: "=">
@@ -75,118 +165,130 @@ TOKEN : {
     | <DIV: "/">
 }
 
-/* Números e Identificadores */
 TOKEN : {
       <#LETRA: ["a"-"z", "A"-"Z"]>
     | <#DIGITO: ["0"-"9"]>
-    | <NUMERO: (<DIGITO>)+>
-
+    | <NUMERO: (<DIGITO>)+ ( "." (<DIGITO>)+ )?>
     | <IDENTIFICADOR: <LETRA> (<LETRA> | <DIGITO>)*>
 }
 
 /* 2. ANALISADOR SINTÁTICO E SEMÂNTICO (REGRAS DA GRAMÁTICA) */
 
+// programa -> sequenciaDecl EOF
 void programa() :
-{}
+{ Comando resultado; }
 {
-    sequenciaDecl() <EOF>
+    resultado = sequenciaDecl() <EOF>
+    { resultado.executar(); }
 }
 
-void sequenciaDecl() :
-{}
+// sequenciaDecl -> ( declaracao ";" )+
+Comando sequenciaDecl() :
+{ final List<Comando> lista = new ArrayList<Comando>(); Comando cmd; }
 {
-    declaracao() ( <PONTO_VIRGULA> declaracao() )*
+    ( cmd = declaracao() <PONTO_VIRGULA> { lista.add(cmd); } )+
+    {
+        return new Comando() {
+            public void executar() {
+                for (Comando c : lista) c.executar();
+            }
+        };
+    }
 }
 
-void declaracao() :
-{}
+// declaracao -> condDecl | repetDecl | atribDecl | leitDecl | escrDecl
+Comando declaracao() :
+{ Comando cmd; }
 {
-    condDecl() | repetDecl() | atribDecl() | leitDecl() | escrDecl()
+    ( cmd = condDecl() | cmd = repetDecl() | cmd = atribDecl() | cmd = leitDecl() | cmd = escrDecl() )
+    { return cmd; }
 }
 
-void condDecl() :
-{}
+// condDecl -> "se" expressao "entao" sequenciaDecl ( "senao" sequenciaDecl )? "fim"
+Comando condDecl() :
+{ Expr cond; Comando bEntao, bSenao = null; }
 {
-    <SE> expressao() <ENTAO> sequenciaDecl() [ <SENAO> sequenciaDecl() ] <FIM>
+    <SE> cond = expressao() <ENTAO> bEntao = sequenciaDecl()
+    [ <SENAO> bSenao = sequenciaDecl() ]
+    <FIM>
+    { return se(cond, bEntao, bSenao); }
 }
 
-void repetDecl() :
-{}
+// repetDecl -> "enquanto" expressao "faca" sequenciaDecl "fim"
+Comando repetDecl() :
+{ Expr cond; Comando corpo; }
 {
-    <ENQUANTO> expressao() <FACA> sequenciaDecl() <FIM>
+    <ENQUANTO> cond = expressao() <FACA> corpo = sequenciaDecl() <FIM>
+    { return enquanto(cond, corpo); }
 }
 
-void atribDecl() :
-{ Token id; double val; }
+// atribDecl -> identificador ":=" expressao
+Comando atribDecl() :
+{ Token t; Expr val; }
 {
-    id = <IDENTIFICADOR> <ATRIB> val = expressao()
-    { variaveis.put(id.image, val); }
+    t = <IDENTIFICADOR> <ATRIB> val = expressao()
+    { return atrib(t.image, val); }
 }
 
-void leitDecl() :
-{}
+// leitDecl -> "leia" identificador
+Comando leitDecl() :
+{ Token t; }
 {
-    <LEIA> <IDENTIFICADOR>
+    <LEIA> t = <IDENTIFICADOR>
+    { return leia(t.image); }
 }
 
-// Comando escreva: calcula e exibe o resultado da expressão no terminal
-void escrDecl() :
-{ double resultado; }
+// escrDecl -> "escreva" expressao
+Comando escrDecl() :
+{ Expr val; }
 {
-    <ESCREVA> resultado = expressao()
-    { System.out.println("\n=> O resultado da expressao e: " + resultado); }
+    <ESCREVA> val = expressao()
+    { return escreva(val); }
 }
 
-// expressao -> exp ( ("<"|">"|"=") exp )?
-double expressao() :
-{ double val1, val2; }
+// expressao -> exp ( ("<"|">"|"="|"<>") exp )?
+Expr expressao() :
+{ Expr val1, val2; }
 {
     val1 = Exp()
     [
-        <MENOR> val2 = Exp() { val1 = (val1 < val2) ? 1.0 : 0.0; }
-      | <MAIOR> val2 = Exp() { val1 = (val1 > val2) ? 1.0 : 0.0; }
-      | <IGUAL> val2 = Exp() { val1 = (val1 == val2) ? 1.0 : 0.0; }
+        <MENOR> val2 = Exp()     { val1 = op(val1, "<", val2); }
+      | <MAIOR> val2 = Exp()     { val1 = op(val1, ">", val2); }
+      | <IGUAL> val2 = Exp()     { val1 = op(val1, "=", val2); }
+      | <DIFERENTE> val2 = Exp() { val1 = op(val1, "<>", val2); }
     ]
     { return val1; }
 }
 
 // exp -> termo ( ("+"|"-") termo )*
-double Exp() :
-{ double val1, val2; }
+Expr Exp() :
+{ Expr val1, val2; }
 {
     val1 = Termo()
     (
-        <MAIS> val2 = Termo() { val1 = val1 + val2; } // Ação semântica da soma
-      | <MENOS> val2 = Termo() { val1 = val1 - val2; } // Ação semântica da subtração
+        <MAIS> val2 = Termo()  { val1 = op(val1, "+", val2); }
+      | <MENOS> val2 = Termo() { val1 = op(val1, "-", val2); }
     )*
     { return val1; }
 }
 
 // termo -> fator ( ("*"|"/") fator )*
-double Termo() :
-{ double val1, val2; }
+Expr Termo() :
+{ Expr val1, val2; }
 {
     val1 = Fator()
     (
-        <MULT> val2 = Fator() { val1 = val1 * val2; } // Ação semântica da multiplicação
-      | <DIV> val2 = Fator() { val1 = val1 / val2; } // Ação semântica da divisão
+        <MULT> val2 = Fator() { val1 = op(val1, "*", val2); }
+      | <DIV> val2 = Fator()  { val1 = op(val1, "/", val2); }
     )*
     { return val1; }
 }
 
-// fator -> "(" exp ")" | numero | identificador
-double Fator() :
-{ double val; Token t; }
+// fator -> "(" expressao ")" | numero | identificador
+Expr Fator() :
+{ Expr val; Token t; }
 {
-    // Se iniciar com parênteses, resolve a expressão dentro deles
-    <APARENTESES> val = expressao() <FPARENTESES>
-    { return val; }
-  |
-    // Se for um número, captura o texto do token e converte para double
-    t = <NUMERO>
-    { return Double.parseDouble(t.image); }
-  |
-    t = <IDENTIFICADOR>
-    { return variaveis.getOrDefault(t.image, 0.0); }
+    <APARENTESES> val = expressao() <FPARENTESES> { return val; }
+  | t = <NUMERO>        { return num(t.image); }
+  | t = <IDENTIFICADOR> { return var(t.image); }
 }
-
